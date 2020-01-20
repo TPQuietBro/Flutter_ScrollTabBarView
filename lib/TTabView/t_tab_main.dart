@@ -18,19 +18,23 @@ class TTabBarMainView extends StatefulWidget {
   TTabBarMainViewState createState() => TTabBarMainViewState();
 }
 
-class TTabBarMainViewState extends State<TTabBarMainView> {
+class TTabBarMainViewState extends State<TTabBarMainView> with SingleTickerProviderStateMixin{
 
   PageController _pageController;
 
   int currentPage = 0;
   double leftScale = 1.5;
   double rightScale = 1;
+  double colorValue = 0;
 
   ScrollDirection scrollDirection;
 
   Color highlightColor = Colors.red;
 
   double lastOffset = 0;
+
+  List list = ['title1','title2'];
+
 
   @override
   void initState() {
@@ -49,11 +53,13 @@ class TTabBarMainViewState extends State<TTabBarMainView> {
       this.rightScale = 1;
       this.rightScale = 1 + 0.5 * offset / width;
       this.leftScale = 1.5 -  0.5 * offset / width;
+      this.colorValue = offset / width;
     } else {
       this.scrollDirection = ScrollDirection.left;
       this.leftScale = 1;
       this.leftScale = 1 + 0.5 * (width - offset) / width;
       this.rightScale = 1.5 - 0.5 * (width - offset) / width;
+      this.colorValue = offset / width;
     }
 
     this.lastOffset = offset;
@@ -65,8 +71,6 @@ class TTabBarMainViewState extends State<TTabBarMainView> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // height: MediaQuery.of(context).size.height - kToolbarHeight,
-      // width: MediaQuery.of(context).size.width,
       child: Column(
         children: <Widget>[
           // TTabBar(),
@@ -90,7 +94,7 @@ class TTabBarMainViewState extends State<TTabBarMainView> {
       width: MediaQuery.of(context).size.width,
       child: PageView.builder(
         itemBuilder: (BuildContext context,int index){
-          return index == 0 ? views().first : views().last;
+          return views(index);
         },
         itemCount: 2,
         controller: _pageController,
@@ -104,60 +108,62 @@ class TTabBarMainViewState extends State<TTabBarMainView> {
   }
 
   List<Widget> titles(){
-    List<Widget> list = [];
-    GestureDetector text1 = GestureDetector(
-      child: Container(
-        height: 30,
-        width: 70,
-        alignment: Alignment.center,
-        child: Transform.scale(
-          scale: this.leftScale > 1 ? this.leftScale : 1,
-          child: Text('title1',style: TextStyle(
-            color: this.currentPage == 0 ? this.highlightColor : Colors.black,
-            fontSize: 13.0
-          ),)
-        ),
-      ),
-      onTap: (){
-        onSelect(0);
-      },
-    );
-    GestureDetector text2 = GestureDetector(
-      child: Container(
-        height: 30,
-        width: 70,
-        alignment: Alignment.center,
-        child: Transform.scale(
-          scale: this.rightScale > 1 ? this.rightScale : 1, 
-          child:Text('title2',style: TextStyle(
-            color: this.currentPage == 1 ? this.highlightColor : Colors.black,
-            fontSize: 13.0
-        ))),
-      ),
-      onTap: (){
-        onSelect(1);
-      },
-    );
-    list.add(text1);
-    list.add(text2);
-    return list;
+    
+    List<Widget> widgets = [];
+    List scales = [this.leftScale,this.rightScale];
+    List colors = [titleColor(this.colorValue, ScrollDirection.left),titleColor(this.colorValue, ScrollDirection.right)];
+    
+    for (var i = 0; i < list.length; i++) {
+      String titleS = list[i];
+      widgets.add(title(titleS, i,scales[i], this.currentPage,colors[i]));
+    }
+    
+    return widgets;
   }
 
-  List<Widget> views(){
-    List<Widget> list = [];
-    Container text1 = Container(
+  Color titleColor(double value,ScrollDirection scrollDirection){
+    Color red = Colors.red;
+    Color black = Colors.black;
+
+    return scrollDirection == ScrollDirection.left ? Color.lerp(red, black, value) : Color.lerp(black, red, value);
+  }
+
+  Widget title(String title,int index,double scale,int page,Color color){
+
+    return GestureDetector(
+      child: Container(
+        height: 30,
+        width: 70,
+        alignment: Alignment.center,
+        child: Transform.scale(
+          scale: scale > 1 ? scale : 1, 
+          child: Text(title,style: TextStyle(
+                  color: color,//page == 1 ? this.highlightColor : Colors.black,
+                  fontSize: 13.0
+              ))
+          ),
+      ),
+      onTap: (){
+        onSelect(index);
+      },
+    );
+  }
+
+  Widget views(int index){
+    List<Widget> widgets = [];
+    List colors = [Colors.orange,Colors.brown];
+    for (var i = 0; i < this.list.length; i++) {
+      widgets.add(view(colors[i]));
+    }
+    return widgets[index];
+  }
+
+  view (Color color){
+    return Container(
       height: MediaQuery.of(context).size.height - kToolbarHeight,
       width: MediaQuery.of(context).size.width,
-      color: Colors.orange,
+      color: color,
     );
-    Container text2 = Container(
-      height: MediaQuery.of(context).size.height - kToolbarHeight,
-      width: MediaQuery.of(context).size.width,
-      color: Colors.brown,
-    );
-    list.add(text1);
-    list.add(text2);
-    return list;
   }
 
   void onSelect(int index){

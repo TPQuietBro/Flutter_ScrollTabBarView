@@ -124,7 +124,7 @@ class TTabBarMainViewState extends State<TTabBarMainView> with SingleTickerProvi
   Color titleColor(double value,ScrollDirection scrollDirection){
     Color red = Colors.red;
     Color black = Colors.black;
-
+    print(value);
     return scrollDirection == ScrollDirection.left ? Color.lerp(red, black, value) : Color.lerp(black, red, value);
   }
 
